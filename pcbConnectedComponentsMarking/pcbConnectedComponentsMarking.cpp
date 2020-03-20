@@ -1,20 +1,35 @@
-﻿// pcbConnectedComponentsMarking.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
-//
+﻿#include <iostream>
+#include<opencv2/opencv.hpp>
 
-#include <iostream>
+using namespace std;
+using namespace cv;
 
 int main()
 {
-    std::cout << "Hello World!\n";
+	cv::Mat srcMat = imread("D:\\Files\\PCB.jpg", 0);//读取图片
+	cv::Mat resMat;
+	cv::Mat binMat;
+	cv::Mat opeMat;
+	cv::Mat labMat;
+	cv::Mat staMat;
+	cv::Mat cenMat;
+	threshold(srcMat, binMat, 100, 255, THRESH_BINARY_INV);//图像二值化
+	cv::Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(15, 15));//定义结构元素
+	morphologyEx(binMat, opeMat, MORPH_OPEN, kernel);//进行开运算
+	opeMat.copyTo(resMat);//深复制开运算结果
+	int num = cv::connectedComponentsWithStats(opeMat, labMat, staMat, cenMat);//连通域标记
+	for (int i = 1; i < num; i++)//画出连通域
+	{
+		cv::Rect bndbox;
+		bndbox.x = staMat.at<int>(i, 0);
+		bndbox.y = staMat.at<int>(i, 1);
+		bndbox.width = staMat.at<int>(i, 2);
+		bndbox.height = staMat.at<int>(i, 3);
+		cv::rectangle(resMat, bndbox, CV_RGB(255, 255, 255), 1, 8, 0);
+	}
+	std::cout << "The number is:" << num - 1 << endl;//自动计件
+	cv::imshow("frame", srcMat);//显示原图像
+	cv::imshow("binMat", opeMat);//显示二值化图像
+	cv::imshow("results", resMat);//显示连通域标记后图像
+	waitKey(0);
 }
-
-// 运行程序: Ctrl + F5 或调试 >“开始执行(不调试)”菜单
-// 调试程序: F5 或调试 >“开始调试”菜单
-
-// 入门使用技巧: 
-//   1. 使用解决方案资源管理器窗口添加/管理文件
-//   2. 使用团队资源管理器窗口连接到源代码管理
-//   3. 使用输出窗口查看生成输出和其他消息
-//   4. 使用错误列表窗口查看错误
-//   5. 转到“项目”>“添加新项”以创建新的代码文件，或转到“项目”>“添加现有项”以将现有代码文件添加到项目
-//   6. 将来，若要再次打开此项目，请转到“文件”>“打开”>“项目”并选择 .sln 文件
